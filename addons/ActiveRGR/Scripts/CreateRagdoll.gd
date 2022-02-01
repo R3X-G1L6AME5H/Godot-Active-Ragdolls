@@ -11,6 +11,7 @@ export (String) var bone_whitelist = ""
 
 var _whitelist := PoolIntArray([])
 
+signal trace_animation_skeleton(value)
 
 """
 CREATION OF ALL THE BONES/RIGID BODIES FOR THE RAGDOLL
@@ -79,7 +80,9 @@ func _add_joint_for( bone_id : int ):
 			
 			JOINT.set("nodes/node_a", JOINT.get_path_to(node_a) )
 			JOINT.set("nodes/node_b", JOINT.get_path_to(node_b) )
-
+			
+			## For enabling and disabling animation tracing
+			self.connect("trace_animation_skeleton", JOINT, "trace_skeleton")
 
 """
 CREATION OF MESHES THAT ARE THE VISUAL REPRESENTATION OF BONES FOR DEBUG
@@ -144,3 +147,17 @@ NAME THE RIGID BODIES APPROPRIATELY
 """
 func get_clean_bone_name( bone_id : int ) -> String:
 	return self.get_bone_name(bone_id).replace(".", "_")
+
+
+
+"""
+DISABLE JOINT CONSTRANTS, AND APPLY FORCES TO MATCH THE TARGET ROTATION
+"""
+func start_tracing():
+	call_deferred("emit_signal", "trace_animation_skeleton", true)
+
+"""
+GO LIMP, AND APPLY ALL JOINT CONSTRAINTS
+"""
+func stop_tracing():
+	call_deferred("emit_signal", "trace_animation_skeleton", false)

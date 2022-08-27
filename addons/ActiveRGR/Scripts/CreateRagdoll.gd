@@ -1,38 +1,59 @@
 tool
 extends Skeleton
 
+"""
+	Active Ragdolls - Ragdoll Creator
+		by Nemo Czanderlitch/Nino Čandrlić
+			@R3X-G1L       (godot assets store)
+			R3X-G1L6AME5H  (github)
+
+	This is the script that reads through all the bones on a Skeleton and creates
+	RigidBodies in their exact positions, with their exact rotations. This does
+	not scale the bones. That part is left to the user.
+"""
+
 const RAGDOLL_BONE = preload("RagdollBone.gd")
 const ACTIVE_RAGDOLL_JOINT = preload("ActiveRagdollJoint.gd")
 
+### Setting up the buttons
 export (bool) var create_ragdoll = false setget _set_create_ragdoll
 export (bool) var create_joints = false setget _set_create_joints
 export (bool) var have_debug_meshes = false setget _set_have_debug_meshes
-export (String) var bone_whitelist = ""
 
+## The white list
+export (String) var bone_whitelist = ""
 var _whitelist := PoolIntArray([])
 
 signal trace_animation_skeleton(value)
 
+
 """
-CREATION OF ALL THE BONES/RIGID BODIES FOR THE RAGDOLL
+	GOES THROUGH THE LIST OF BONES AND CREATES THE RIGIDBODIES
 """
 func _set_create_ragdoll(value):
 	if value:
+		## WHITELIST
 		if bone_whitelist:
-			_whitelist.resize(0)  ## Clear list
-			if _interpret_whitelist():
+			_whitelist.resize(0)  ## Clear whitelist
+			if self._interpret_whitelist():  ## get a new whitelist
 				for bone_id in _whitelist:
 					_add_ragdoll_bone(bone_id)
+
+		## BLACKLIST
 		else:
 			for bone_id in range(self.get_bone_count()):
 				_add_ragdoll_bone(bone_id)
 
+"""
+	CREATE THE RIGID BODIES FROM THE SKELETON
+"""
 func _add_ragdoll_bone( bone_id : int ):
 	var BONE = RAGDOLL_BONE.new()
 	BONE.bone_name = self.get_bone_name(bone_id)
 	BONE.name = get_clean_bone_name(bone_id)
 	BONE.transform = self.get_bone_global_pose(bone_id)
-	
+
+	## Create the collisions for the rigid bodies
 	var collision := CollisionShape.new()
 	collision.shape = CapsuleShape.new()
 	collision.shape.radius = .1
@@ -41,15 +62,18 @@ func _add_ragdoll_bone( bone_id : int ):
 	BONE.add_child(collision)
 	
 	self.add_child(BONE)
+
+	## Magic runes that please our lord Godot
 	BONE.set_owner(owner) 
 	collision.set_owner(owner)
 
 
 """
-CREATION OF ALL THE JOINTS INBETWEEN THE BONES
+	CREATION OF ALL THE JOINTS INBETWEEN THE BONES
 """
 func _set_create_joints(value):
 	if value:
+		## WHITELST
 		if bone_whitelist:
 			_whitelist.resize(0)   ## Clear list
 			if _interpret_whitelist():
@@ -58,10 +82,14 @@ func _set_create_joints(value):
 						_add_joint_for(bone_id)
 				else:
 					push_error("Too few bones whitelisted. Need at least two.")
+		## BLACKLIST
 		else:
 			for bone_id in range(1, self.get_bone_count()):
 				_add_joint_for(bone_id)
 
+"""
+	CREATES THE 6DOF JOINT ON THE SKELETON
+"""
 func _add_joint_for( bone_id : int ):
 	### CHECK THAT THIS BONE ISN'T A ROOT BONE
 	if self.get_bone_parent(bone_id) >= 0:
@@ -86,6 +114,7 @@ func _add_joint_for( bone_id : int ):
 
 """
 CREATION OF MESHES THAT ARE THE VISUAL REPRESENTATION OF BONES FOR DEBUG
+	(FOR DEBUGGNG)
 """
 func _set_have_debug_meshes( value ):
 	have_debug_meshes = value

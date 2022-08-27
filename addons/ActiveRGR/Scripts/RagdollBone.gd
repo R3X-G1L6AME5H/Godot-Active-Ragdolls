@@ -1,9 +1,21 @@
 extends RigidBody
 
+"""
+	Active Ragdolls - Ragdoll Bone
+		by Nemo Czanderlitch/Nino Čandrlić
+			@R3X-G1L       (godot assets store)
+			R3X-G1L6AME5H  (github)
+
+	This is the script which transfers the rotation from the RigidBody
+	to the skeleton.
+"""
+
 export (String) var bone_name
 var BONE_INDEX : int = -1
 
-
+"""
+	INIT
+"""
 func _ready() -> void:
 	if Engine.editor_hint:
 		set_physics_process(false)
@@ -15,7 +27,7 @@ func _ready() -> void:
 
 
 """
-APPLY OWN ROTATION TO THE RESPECTIVE BONE IN PARENT SKELETON 
+	APPLY OWN ROTATION TO THE RESPECTIVE BONE IN PARENT SKELETON
 """
 func _physics_process(_delta: float) -> void:
 	var bone_global_rotation : Basis = get_parent().global_transform.basis * get_parent().get_bone_global_pose(BONE_INDEX).basis
